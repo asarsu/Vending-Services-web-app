@@ -1,34 +1,77 @@
 import { useState, useEffect } from 'react';
-import { db } from '../services/db';
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 
 export default function ManagePlazas() {
   const [plazas, setPlazas] = useState([]);
   const [newPlazaName, setNewPlazaName] = useState('');
 
+  const loadPlazasFromAPI = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/locations/');
+      const data = await response.json();
+      setPlazas(data);
+    } catch (error) {
+      console.error('Error al cargar las plazas:', error);
+    }
+  };
+
   useEffect(() => {
-    loadPlazas();
+    loadPlazasFromAPI();
   }, []);
 
-  const loadPlazas = () => {
-    setPlazas(db.getPlazas());
-  };
 
-  const handleAdd = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newPlazaName.trim()) return;
-    db.addPlaza(newPlazaName);
-    setNewPlazaName('');
-    loadPlazas();
+
+    if (!newPlazaName.trim()) {
+      alert('Por favor ingresa un nombre para la plaza');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/locations/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: newPlazaName,
+          address: ''
+        })
+      });
+
+      if (response.ok) {
+        setNewPlazaName('');
+        await loadPlazasFromAPI();
+        alert('Plaza agregada correctamente');
+      } else {
+        const errorData = await response.json();
+        console.error('Error al agregar la plaza:', errorData);
+        alert('Error al agregar la plaza: ' + JSON.stringify(errorData));
+      }
+    } catch (error) {
+      console.error('Error de conexión:', error);
+      alert('Error de conexión con el servidor');
+    }
   };
 
-  const handleDelete = (id) => {
-    if (confirm('¿Estás seguro de eliminar esta plaza? No debe tener máquinas asociadas.')) {
-      const success = db.deletePlaza(id);
-      if (success) {
-        loadPlazas();
-      } else {
-        alert('No se puede eliminar: Esta plaza tiene máquinas asociadas.');
+  const handleDelete = async (id) => {
+    if (confirm('¿Estás seguro de eliminar esta plaza?')) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/locations/${id}/`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          await loadPlazasFromAPI();
+          alert('Plaza eliminada correctamente');
+        } else {
+          const errorData = await response.json();
+          alert('No se pudo eliminar: ' + JSON.stringify(errorData));
+        }
+      } catch (error) {
+        console.error('Error al eliminar:', error);
+        alert('Error de conexión al eliminar la plaza');
       }
     }
   };
@@ -41,7 +84,10 @@ export default function ManagePlazas() {
       </div>
 
       <div className="card">
-        <form onSubmit={handleAdd} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <form 
+          onSubmit={handleSubmit} 
+          style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}
+          >
           <div style={{ position: 'relative', flex: 1 }}>
             <MapPin size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--color-text-muted)' }} />
             <input 
