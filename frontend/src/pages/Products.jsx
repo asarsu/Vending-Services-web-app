@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { db } from '../services/db';
 import { Edit2, Save, X, Plus, Trash2, Package, Coffee, Cookie } from 'lucide-react';
+import { loadDataFromAPI } from '../services/api';
+import { ENDPOINTS } from '../utils/endpoints';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  const [activeTab, setActiveTab] = useState('coffee'); // 'coffee' | 'snack'
+  const [typeMachine, setTypeMachine] = useState('coffee'); // 'coffee' | 'snack'
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   
@@ -13,13 +15,13 @@ export default function Products() {
   const [newProduct, setNewProduct] = useState({ name: '', provider: '', cost: '', price: '', productType: '' });
 
   useEffect(() => {
-    refreshProducts();
+    loadDataFromAPI(ENDPOINTS.products, setProducts);
   }, []);
 
-  const refreshProducts = () => {
-    setProducts(db.getProducts());
-  };
-
+  // const refreshProducts = () => {
+  //   loadDataFromAPI(ENDPOINTS.products, setProducts);
+  // };
+  console.log('Products:', products);
   const handleAdd = (e) => {
     e.preventDefault();
     if (!newProduct.name || !newProduct.price) return;
@@ -27,7 +29,7 @@ export default function Products() {
     db.addProduct({
       name: newProduct.name,
       provider: newProduct.provider,
-      category: activeTab, // Auto-assign to current tab category
+      category: typeMachine, // Auto-assign to current tab category
       productType: newProduct.productType, // New sub-type
       cost: parseFloat(newProduct.cost) || 0,
       price: parseFloat(newProduct.price) || 0
@@ -68,8 +70,8 @@ export default function Products() {
     refreshProducts();
   };
 
-  const filteredProducts = products.filter(p => p.category === activeTab);
-  
+  const filteredProducts = products.filter(p => p.type_machine === typeMachine);
+  console.log(typeMachine, 'Products:', filteredProducts, );
   const PRODUCT_TYPES = [
     'Bebidas', 'Lácteos', 'Golosinas', 'Snacks', 'Bollería', 'No Comestibles', 'Otros'
   ];
@@ -86,21 +88,21 @@ export default function Products() {
           onClick={() => setShowAddForm(!showAddForm)}
         >
           {showAddForm ? <X size={18} /> : <Plus size={18} />}
-          {showAddForm ? 'Cancelar' : `Nuevo Producto (${activeTab === 'coffee' ? 'Café' : 'Snack'})`}
+          {showAddForm ? 'Cancelar' : `Nuevo Producto (${typeMachine === 'coffee' ? 'Café' : 'Snack'})`}
         </button>
       </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--color-border)' }}>
         <button
-          onClick={() => setActiveTab('coffee')}
+          onClick={() => setTypeMachine('coffee')}
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem',
             padding: '1rem',
             background: 'transparent',
             border: 'none',
-            borderBottom: activeTab === 'coffee' ? '2px solid var(--color-accent)' : '2px solid transparent',
-            color: activeTab === 'coffee' ? 'var(--color-accent)' : 'var(--color-text-muted)',
+            borderBottom: typeMachine === 'coffee' ? '2px solid var(--color-accent)' : '2px solid transparent',
+            color: typeMachine === 'coffee' ? 'var(--color-accent)' : 'var(--color-text-muted)',
             fontWeight: 600,
             cursor: 'pointer'
           }}
@@ -108,14 +110,14 @@ export default function Products() {
           <Coffee size={20} /> Máquinas de Café
         </button>
         <button
-          onClick={() => setActiveTab('snack')}
+          onClick={() => setTypeMachine('snack')}
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem',
             padding: '1rem',
             background: 'transparent',
             border: 'none',
-            borderBottom: activeTab === 'snack' ? '2px solid var(--color-accent)' : '2px solid transparent',
-            color: activeTab === 'snack' ? 'var(--color-accent)' : 'var(--color-text-muted)',
+            borderBottom: typeMachine === 'snack' ? '2px solid var(--color-accent)' : '2px solid transparent',
+            color: typeMachine === 'snack' ? 'var(--color-accent)' : 'var(--color-text-muted)',
             fontWeight: 600,
             cursor: 'pointer'
           }}
@@ -126,8 +128,8 @@ export default function Products() {
 
       {showAddForm && (
         <div className="card" style={{ marginBottom: '2rem', border: '1px solid var(--color-accent)' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Agregar a: {activeTab === 'coffee' ? 'Café' : 'Snacks'}</h3>
-          <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: activeTab === 'snack' ? 'minmax(200px, 1.5fr) 1fr 1fr 1fr 1fr auto' : 'minmax(200px, 1.5fr) 1fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Agregar a: {typeMachine === 'coffee' ? 'Café' : 'Snacks'}</h3>
+          <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: typeMachine === 'snack' ? 'minmax(200px, 1.5fr) 1fr 1fr 1fr 1fr auto' : 'minmax(200px, 1.5fr) 1fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
             <div>
               <label style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block' }}>Nombre</label>
               <input 
@@ -139,7 +141,7 @@ export default function Products() {
               />
             </div>
             
-            {activeTab === 'snack' && (
+            {typeMachine === 'snack' && (
               <div>
                 <label style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', display: 'block' }}>Tipo</label>
                 <select
@@ -196,7 +198,7 @@ export default function Products() {
           <thead style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
             <tr>
               <th style={{ padding: '1rem' }}>Producto</th>
-              {activeTab === 'snack' && <th style={{ padding: '1rem' }}>Tipo</th>}
+              {typeMachine === 'snack' && <th style={{ padding: '1rem' }}>Tipo</th>}
               <th style={{ padding: '1rem' }}>Proveedor</th>
               <th style={{ padding: '1rem', textAlign: 'right' }}>Costo</th>
               <th style={{ padding: '1rem', textAlign: 'right' }}>Venta</th>
@@ -206,7 +208,7 @@ export default function Products() {
           </thead>
           <tbody>
             {filteredProducts.length === 0 ? (
-              <tr><td colSpan={activeTab === 'snack' ? 7 : 6} style={{ padding: '2rem', textAlign: 'center' }}>No hay productos en esta categoría</td></tr>
+              <tr><td colSpan={typeMachine === 'snack' ? 7 : 6} style={{ padding: '2rem', textAlign: 'center' }}>No hay productos en esta categoría</td></tr>
             ) : filteredProducts.map(product => {
               const isEditing = editingId === product.id;
               const margin = product.price - product.cost;
@@ -244,7 +246,7 @@ export default function Products() {
                   </td>
                   
                   {/* Type - Only for Snacks */}
-                  {activeTab === 'snack' && (
+                  {typeMachine === 'snack' && (
                     <td style={{ padding: '1rem' }}>
                       {isEditing ? (
                         <select 
@@ -285,7 +287,7 @@ export default function Products() {
                         onChange={(e) => setEditForm({...editForm, cost: e.target.value})}
                       />
                     ) : (
-                      `$${product.cost.toFixed(2)}`
+                      `$${product.cost}`
                     )}
                   </td>
                   
@@ -300,7 +302,7 @@ export default function Products() {
                         onChange={(e) => setEditForm({...editForm, price: e.target.value})}
                       />
                     ) : (
-                      <span style={{ fontWeight: 600 }}>${product.price.toFixed(2)}</span>
+                      <span style={{ fontWeight: 600 }}>${product.price}</span>
                     )}
                   </td>
                   
@@ -311,7 +313,7 @@ export default function Products() {
                     </div>
                     {product.price > 0 && (
                       <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                        {((margin / product.price) * 100).toFixed(1)}%
+                        {((margin / product.price) * 100).toFixed(2)}%
                       </div>
                     )}
                   </td>
