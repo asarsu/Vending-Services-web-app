@@ -24,20 +24,6 @@ export default function ManageMachines() {
     loadDataFromAPI(ENDPOINTS.machines, setMachines);
     // loadDataFromAPI ENDPOINTS.products, setProducts);
   }, []);
-  console.log(machines)
-
-  // const handleAdd = (e) => {
-  //   e.preventDefault();
-  //   if (!machines.name || !machines.locations) return;
-
-  //   db.addMachine({
-  //     ...newMachine,
-  //     plazaId: parseInt(newMachine.plazaId),
-  //     products: [] // Start empty or default? Let's start empty.
-  //   });
-  //   setNewMachine({ name: '', plazaId: '', type: 'coffee' });
-  //   refreshData();
-  // };
 
     const handleAdd = async (e) => {
     e.preventDefault();
@@ -65,7 +51,8 @@ export default function ManageMachines() {
         await loadDataFromAPI(ENDPOINTS.machines, setMachines);
         alert('Máquina agregada correctamente');
       } else {
-        const errorData = await response.json();        const [newMachine, setNewMachine] = useState({
+        const errorData = await response.json();        
+        const [newMachine, setNewMachine] = useState({
           name: '',
           plazaId: '',
           type: 'coffee'
@@ -157,7 +144,7 @@ export default function ManageMachines() {
                   <input 
                     type="radio" 
                     name="type" 
-                    checked={newMachine.type === 'coffee' || newMachine.type === 'snacks'} 
+                    checked={newMachine.type === 'coffee'} 
                     onChange={() => setNewMachine({...newMachine, type: newMachine.type === 'coffee' ? 'snack' : 'coffee'})}
                   />
                   <span>Café</span>
