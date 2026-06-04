@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
